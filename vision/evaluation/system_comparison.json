@@ -1,0 +1,26 @@
+[
+  {
+    "System": "Base Yolo",
+    "Overall Accuracy": "5.71%",
+    "Total Predictions": 70,
+    "Correct Predictions": 4,
+    "Avg Processing Time": "0.002s",
+    "Avg Memory Usage": "0.0MB"
+  },
+  {
+    "System": "Trained Deepface",
+    "Overall Accuracy": "75.71%",
+    "Total Predictions": 70,
+    "Correct Predictions": 53,
+    "Avg Processing Time": "0.004s",
+    "Avg Memory Usage": "0.0MB"
+  },
+  {
+    "System": "Trained Sentiment",
+    "Overall Accuracy": "27.14%",
+    "Total Predictions": 70,
+    "Correct Predictions": 19,
+    "Avg Processing Time": "0.001s",
+    "Avg Memory Usage": "0.0MB"
+  }
+]

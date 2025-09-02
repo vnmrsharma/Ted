@@ -1,0 +1,38 @@
+{
+  "evaluation_summary": {
+    "total_samples": 70,
+    "max_samples_per_class": 10,
+    "evaluation_date": "2025-09-03 00:26:29"
+  },
+  "system_results": {
+    "base-yolo": {
+      "system": "base-yolo",
+      "accuracy": 0.05714285714285714,
+      "total_predictions": 70,
+      "correct_predictions": 4,
+      "avg_processing_time": 0.0016892194747924806,
+      "avg_memory_usage": 0.0
+    },
+    "trained-deepface": {
+      "system": "trained-deepface",
+      "accuracy": 0.7571428571428571,
+      "total_predictions": 70,
+      "correct_predictions": 53,
+      "avg_processing_time": 0.004188595499311175,
+      "avg_memory_usage": 0.0
+    },
+    "trained-sentiment": {
+      "system": "trained-sentiment",
+      "accuracy": 0.2714285714285714,
+      "total_predictions": 70,
+      "correct_predictions": 19,
+      "avg_processing_time": 0.0008564438138689314,
+      "avg_memory_usage": 0.0
+    }
+  },
+  "recommendations": [
+    "Best accuracy: Trained Deepface (75.71%)",
+    "Fastest processing: Trained Sentiment (0.001s)",
+    "All systems show good accuracy (>70%)"
+  ]
+}

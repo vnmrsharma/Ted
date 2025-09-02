@@ -1,0 +1,12 @@
+pandas>=1.5.0
+numpy>=1.24.0
+matplotlib>=3.6.0
+seaborn>=0.12.0
+psutil>=5.9.0
+opencv-python>=4.8.0
+torch>=2.0.0
+torchvision>=0.15.0
+deepface>=0.0.95
+tensorflow>=2.13.0
+ultralytics>=8.0.0
+Pillow>=9.5.0
