@@ -1,0 +1,7 @@
+{
+  "max_samples_per_class": 50,
+  "batch_size": 10,
+  "analysis_timeout": 30,
+  "save_failed_images": true,
+  "generate_visualizations": true
+}
