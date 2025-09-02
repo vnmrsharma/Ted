@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore')
 class RealTimeEmotionDetector:
     """Real-time emotion detection using trained model"""
     
-    def __init__(self, model_path='best_emotion_model.pth'):
+    def __init__(self, model_path='/Users/vin/Desktop/yolo-test/vision/trained-sentiment/hybrid_best_emotion_model.pth'):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu')
         self.emotion_names = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
         self.emotion_colors = {
@@ -382,7 +382,7 @@ class RealTimeEmotionDetector:
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="Real-time Emotion Detection System")
-    parser.add_argument("--model", default="best_emotion_model.pth", 
+    parser.add_argument("--model", default="/Users/vin/Desktop/yolo-test/vision/trained-sentiment/hybrid_best_emotion_model.pth", 
                        help="Path to trained model file")
     parser.add_argument("--camera", type=int, default=0, 
                        help="Camera device ID")
