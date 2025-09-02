@@ -62,44 +62,60 @@ class EmotionTester:
         checkpoint = torch.load(model_path, map_location=self.device)
         
         # Create the same model architecture used in training
-        class AdvancedEmotionClassifier(nn.Module):
+        class ImprovedEmotionClassifier(nn.Module):
             def __init__(self, num_classes=7, pretrained=False):
-                super(AdvancedEmotionClassifier, self).__init__()
+                super(ImprovedEmotionClassifier, self).__init__()
                 
-                # Use EfficientNet-B2 as backbone
-                self.backbone = models.efficientnet_b2(pretrained=pretrained)
+                # Use EfficientNet-B3 as backbone
+                self.backbone = models.efficientnet_b3(pretrained=pretrained)
                 
                 # Get the number of features from the backbone
-                # EfficientNet-B2 has 1408 features in the last layer
-                num_features = 1408
+                # EfficientNet-B3 has 1536 features in the last layer
+                num_features = 1536
                 
-                # Create a proper classifier that works with the backbone
+                # Attention mechanism
+                self.attention = nn.Sequential(
+                    nn.Conv2d(num_features, num_features // 8, 1),
+                    nn.ReLU(inplace=True),
+                    nn.Conv2d(num_features // 8, num_features, 1),
+                    nn.Sigmoid()
+                )
+                
+                # Improved classifier with residual connections
                 self.classifier = nn.Sequential(
                     nn.AdaptiveAvgPool2d((1, 1)),
                     nn.Flatten(),
-                    nn.Dropout(p=0.4),
+                    nn.Dropout(p=0.5),
                     nn.Linear(num_features, 1024),
                     nn.BatchNorm1d(1024),
                     nn.ReLU(inplace=True),
-                    nn.Dropout(p=0.3),
+                    nn.Dropout(p=0.4),
                     nn.Linear(1024, 512),
                     nn.BatchNorm1d(512),
                     nn.ReLU(inplace=True),
+                    nn.Dropout(p=0.3),
+                    nn.Linear(512, 256),
+                    nn.BatchNorm1d(256),
+                    nn.ReLU(inplace=True),
                     nn.Dropout(p=0.2),
-                    nn.Linear(512, num_classes)
+                    nn.Linear(256, num_classes)
                 )
             
             def forward(self, x):
-                # Pass through backbone (excluding the original classifier)
+                # Pass through backbone features
                 x = self.backbone.features(x)
                 
-                # Apply our custom classifier
+                # Apply attention mechanism
+                attention_weights = self.attention(x)
+                x = x * attention_weights
+                
+                # Apply classifier
                 x = self.classifier(x)
                 
                 return x
         
         # Create model instance
-        model = AdvancedEmotionClassifier(num_classes=7, pretrained=False)
+        model = ImprovedEmotionClassifier(num_classes=7, pretrained=False)
         
         # Load trained weights
         model.load_state_dict(checkpoint['model_state_dict'])
