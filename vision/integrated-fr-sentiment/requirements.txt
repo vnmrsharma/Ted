@@ -1,0 +1,18 @@
+# Core dependencies for integrated face recognition + emotion detection
+numpy>=1.24.0
+opencv-python>=4.8.0
+deepface>=0.0.79
+
+# Gradio interface (compatible with TensorFlow)
+gradio>=3.50.0
+
+# Additional utilities
+Pillow>=9.0.0
+requests>=2.28.0
+
+# TensorFlow (compatible versions)
+tensorflow-macos>=2.13.0
+keras>=2.13.0
+
+# Fix typing-extensions conflict
+typing-extensions>=3.6.6,<4.6.0

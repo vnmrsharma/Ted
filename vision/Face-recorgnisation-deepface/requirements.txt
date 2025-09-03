@@ -1,0 +1,23 @@
+# Core dependencies with compatible versions
+numpy==1.24.3
+pandas==2.0.3
+typing-extensions==4.5.0
+
+# DeepFace and computer vision
+deepface>=0.0.79
+opencv-python>=4.8.0
+Pillow>=9.0.0
+
+# Gradio with compatible version
+gradio==3.50.2
+
+# TensorFlow with compatible versions
+tensorflow==2.13.0
+keras==2.13.1
+
+# Face detection backends
+mtcnn>=0.1.1
+retina-face>=0.0.13
+
+# Additional utilities
+requests>=2.28.0
