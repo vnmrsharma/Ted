@@ -49,19 +49,23 @@ class PersonaGenerator:
         self.config = config or PersonaConfig()
         self.tokenizer = None
         self.model = None
+        # Force GPU usage if available - fix for RTX A500 4GB
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.is_loaded = False
+        
+        # Debug GPU detection
+        if torch.cuda.is_available():
+            gpu_name = torch.cuda.get_device_name(0)
+            gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+            logger.info(f"GPU detected: {gpu_name} with {gpu_memory:.1f}GB memory")
         
         logger.info(f"Initializing PersonaGenerator on device: {self.device}")
     
     def setup_quantization(self):
         """Setup quantization configuration for memory efficiency."""
-        if not self.config.use_quantization:
-            return None
-        
-        # For GPT-OSS-20B, the model is already quantized with Mxfp4Config
-        # We don't need to apply additional quantization
-        logger.info("GPT-OSS-20B model is already quantized, skipping additional quantization")
+        # GPT-OSS-20B is already pre-quantized with Mxfp4Config
+        # Additional quantization would cause conflicts
+        logger.info("GPT-OSS-20B model is already quantized with Mxfp4Config, skipping additional quantization")
         return None
     
     def setup_lora(self) -> LoraConfig:
@@ -98,17 +102,17 @@ class PersonaGenerator:
             if self.tokenizer.pad_token is None:
                 self.tokenizer.pad_token = self.tokenizer.eos_token
             
-            # Setup quantization
-            quantization_config = self.setup_quantization()
-            
-            # Load model - GPT-OSS-20B is already quantized
+            # Load model - GPT-OSS-20B is already quantized with Mxfp4Config
             model_kwargs = {
                 "trust_remote_code": True,
-                "torch_dtype": torch.bfloat16 if self.device == "cuda" else torch.float32,
+                "dtype": torch.bfloat16 if self.device == "cuda" else torch.float32,
                 "device_map": "auto" if self.device == "cuda" else None,
             }
             
-            # Don't apply additional quantization as the model is already quantized
+            # Note: GPT-OSS-20B is already pre-quantized with Mxfp4Config
+            # Do not apply additional quantization to avoid conflicts
+            logger.info("Loading pre-quantized GPT-OSS-20B model (Mxfp4Config)")
+            
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.config.model_name,
                 **model_kwargs
@@ -170,25 +174,87 @@ class PersonaGenerator:
         """Create a comprehensive prompt for persona generation."""
         character_context = self.create_character_context(character_data, script_data)
         
-        prompt = f"""You are {character_data['name']}, a character from a movie script. Based on the following character analysis, respond in character to any questions or conversations.
+        # Extract dialogue patterns and speech characteristics
+        dialogue_count = character_data.get('dialogue_count', 0)
+        avg_words_per_line = character_data.get('total_words', 0) / max(dialogue_count, 1)
+        key_quotes = character_data.get('key_quotes', [])
+        
+        # Analyze speech patterns from quotes
+        speech_patterns = []
+        if key_quotes:
+            # Extract common patterns
+            has_contractions = any("'" in quote for quote in key_quotes[:3])
+            has_casual_language = any(word in quote.lower() for quote in key_quotes[:3] for word in ['yeah', 'ok', 'hey', 'come on'])
+            has_formal_language = any(len(quote.split()) > 15 for quote in key_quotes[:3])
+            
+            if has_contractions:
+                speech_patterns.append("uses contractions naturally")
+            if has_casual_language:
+                speech_patterns.append("speaks casually and conversationally")
+            if has_formal_language:
+                speech_patterns.append("occasionally uses longer, more elaborate sentences")
+            
+            # Analyze sentence length preference
+            if avg_words_per_line > 20:
+                speech_patterns.append("tends to speak in longer, detailed responses")
+            elif avg_words_per_line < 8:
+                speech_patterns.append("prefers shorter, more direct responses")
+        
+        # Build relationships context
+        relationships = character_data.get('relationships', {})
+        top_relationships = sorted(relationships.items(), key=lambda x: x[1], reverse=True)[:3] if relationships else []
+        
+        prompt = f"""<role>
+You are {character_data['name']}, a character from a movie script. You must embody this character completely and respond authentically as they would, maintaining perfect consistency with their established personality, speech patterns, and relationships.
+</role>
 
-CHARACTER ANALYSIS:
+<character_profile>
 {character_context}
 
-SCRIPT CONTEXT:
-This character appears in a movie script with {script_data['metadata']['total_characters']} characters across {script_data['metadata']['total_scenes']} scenes.
+<speech_style>
+{character_data['name']} speaks with these characteristics:
+- Average response length: {int(avg_words_per_line)} words per statement
+- Dialogue frequency: {dialogue_count} total lines in the script
+{f"- Speech patterns: {', '.join(speech_patterns)}" if speech_patterns else "- Speech patterns: Natural conversational style"}
+</speech_style>
 
-INSTRUCTIONS:
-- Stay completely in character as {character_data['name']}
-- Use the personality traits, dialogue patterns, and relationships shown above
-- Respond naturally as this character would
-- Maintain consistency with the character's established personality
-- If asked about other characters, respond based on the relationships shown
-- Keep responses engaging and true to the character
+<key_dialogue_examples>
+Authentic {character_data['name']} dialogue examples:
+{chr(10).join([f'"{quote}"' for quote in key_quotes[:3]]) if key_quotes else "No specific dialogue examples available - speak naturally for this character."}
+</key_dialogue_examples>
 
-User: {user_input if user_input else "Hello, tell me about yourself."}
+<relationships>
+{character_data['name']}'s key relationships:
+{chr(10).join([f"- {other_char}: {'Strong connection' if strength > 10 else 'Moderate connection' if strength > 5 else 'Limited interaction'} (interaction level: {strength})" for other_char, strength in top_relationships]) if top_relationships else "- Limited relationship information available"}
+</relationships>
 
-{character_data['name']}:"""
+<script_context>
+Setting: Movie script with {script_data['metadata']['total_characters']} characters across {script_data['metadata']['total_scenes']} scenes
+{character_data['name']} appears in {len(character_data.get('scenes_appeared', []))} scenes and has significant presence in the story.
+</script_context>
+</character_profile>
+
+<instructions>
+CRITICAL BEHAVIORAL GUIDELINES:
+1. IDENTITY: You ARE {character_data['name']}. Never break character or refer to yourself as an AI.
+2. CONSISTENCY: Every response must align with the personality traits, relationships, and speech patterns shown above.
+3. DIALOGUE STYLE: Match the speaking style demonstrated in the key dialogue examples - maintain the same tone, vocabulary level, and sentence structure preferences.
+4. RELATIONSHIPS: When discussing other characters, respond based on your established relationship dynamics and interaction levels.
+5. AUTHENTICITY: React to questions and situations as {character_data['name']} genuinely would, drawing from their demonstrated personality and experiences in the script.
+6. EMOTIONAL RANGE: Express emotions and opinions that align with {character_data['name']}'s established personality traits.
+
+RESPONSE APPROACH:
+- Respond naturally in {character_data['name']}'s voice
+- Use speech patterns consistent with the dialogue examples
+- Reference relationships and experiences from the script context when relevant
+- Maintain the character's typical response length ({int(avg_words_per_line)} words average)
+- Stay true to personality traits: {', '.join(character_data.get('personality_traits', ['authentic character behavior']))}
+</instructions>
+
+<conversation>
+Human: {user_input if user_input else "Hello, tell me about yourself."}
+
+{character_data['name']}:</conversation>"""
         
         return prompt
     
