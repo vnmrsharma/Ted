@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Open Speech Stack</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    button { padding: 10px 14px; margin: 6px 0; }
+    textarea, input { width: 100%; padding: 8px; margin: 6px 0; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 12px 0; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Open Speech Stack</h1>
+
+  <div class="card">
+    <h3>🎙️ Record 5s → STT</h3>
+    <div class="row">
+      <button id="recBtn">Record 5s</button>
+      <label>Language (optional): <input id="lang" placeholder="auto/en/es/hi..."></label>
+    </div>
+    <pre id="sttOut">Transcript will appear here…</pre>
+    <details><summary>SRT</summary><pre id="srtOut"></pre></details>
+  </div>
+
+  <div class="card">
+    <h3>🗣️ Text → TTS</h3>
+    <textarea id="ttsText" rows="3" placeholder="Type text to speak…">Hello from Piper, running locally!</textarea>
+    <button id="ttsBtn">Speak</button>
+    <audio id="player" controls></audio>
+  </div>
+
+<script>
+async function postSTT(blob, lang) {
+  const fd = new FormData();
+  fd.append('file', blob, 'mic.webm');
+  if (lang) fd.append('language', lang);
+  const res = await fetch('/stt', { method: 'POST', body: fd });
+  if (!res.ok) throw new Error('STT failed');
+  return res.json();
+}
+
+document.getElementById('recBtn').onclick = async () => {
+  const lang = document.getElementById('lang').value.trim() || null;
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const rec = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+  const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  rec.onstop = async () => {
+    const blob = new Blob(chunks, { type: 'audio/webm' });
+    try {
+      const data = await postSTT(blob, lang);
+      document.getElementById('sttOut').textContent = data.text || '';
+      document.getElementById('srtOut').textContent = data.srt || '';
+    } catch (e) {
+      document.getElementById('sttOut').textContent = e.message;
+    }
+  };
+  rec.start();
+  setTimeout(() => rec.stop(), 5000);
+};
+
+document.getElementById('ttsBtn').onclick = async () => {
+  const text = document.getElementById('ttsText').value;
+  const fd = new FormData(); fd.append('text', text);
+  const res = await fetch('/tts', { method: 'POST', body: fd });
+  if (!res.ok) { alert('TTS failed'); return; }
+  const blob = await res.blob();
+  document.getElementById('player').src = URL.createObjectURL(blob);
+};
+</script>
+</body>
+</html>
