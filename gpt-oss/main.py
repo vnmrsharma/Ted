@@ -444,13 +444,11 @@ def main():
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            st.info("Fine-tune the model for better character-specific responses")
+            st.info("Character responses use advanced prompt engineering for authenticity")
         
         with col2:
-            if st.button("🎯 Fine-tune Model", type="secondary"):
-                with st.spinner("Fine-tuning model..."):
-                    status = app.fine_tune_character(app.current_character)
-                    st.success(status)
+            st.info("🔧 Fine-tuning temporarily disabled due to model limitations")
+            # Note: Fine-tuning button removed due to meta tensor issues with device-mapped models
     
     # Footer
     st.markdown("---")

@@ -8,7 +8,7 @@ A comprehensive system for generating realistic character personas from movie sc
 - **GPT-OSS-20B Integration**: State-of-the-art language model for realistic persona generation
 - **Character Analysis**: Automatic personality trait detection and relationship analysis
 - **Interactive Chat Interface**: Chat with any character persona using Streamlit
-- **Fine-tuning Capabilities**: Customize models for specific characters
+- **Advanced Persona Generation**: Sophisticated prompt engineering for character-accurate responses
 - **Memory Efficient**: 4-bit quantization and LoRA for optimal performance
 
 ## 🚀 Quick Start
@@ -120,18 +120,22 @@ gpt-oss/
 - Analyzes dialogue references between characters
 - Creates relationship strength matrices
 
-## 🔄 Fine-tuning Process
+## 🔄 Character Persona Generation
 
-### When to Fine-tune
-- Character has unique speech patterns
-- Standard responses don't capture character essence
-- Need more accurate personality representation
+### How Character Personas Work
+- Advanced prompt engineering creates character-specific responses
+- Character dialogue and personality traits guide response generation
+- Context from script relationships enhances authenticity
+- GPT-OSS-20B's pre-training provides realistic character interactions
 
-### Fine-tuning Process
-1. Select character and click "Fine-tune for Better Responses"
-2. System creates training data from character's dialogue
-3. LoRA fine-tuning runs for 3 epochs
-4. Model saves automatically for future use
+### Current Limitations
+**Note:** Fine-tuning is currently disabled due to technical limitations with the pre-quantized GPT-OSS-20B model and device mapping. The system uses sophisticated prompt engineering instead to ensure character-accurate responses.
+
+### Character Response Quality
+- Responses are generated using character-specific prompts
+- Personality traits extracted from script guide response style
+- Character relationships and scene context inform responses
+- Base model capabilities ensure high-quality, contextual responses
 
 ## 🛠️ Advanced Usage
 
@@ -246,10 +250,11 @@ class PersonaConfig:
 - Minimal quality loss for most use cases
 - Enables running on consumer hardware
 
-### LoRA Fine-tuning
-- Efficient parameter updates (0.1% of model parameters)
-- Fast fine-tuning (minutes vs hours)
-- Preserves base model capabilities
+### Prompt Engineering
+- Character-specific prompt templates ensure authentic responses
+- Personality traits and relationships integrated into generation
+- Context-aware responses based on script analysis
+- Advanced prompt strategies for consistent character portrayal
 
 ## 📄 License
 
